@@ -15,7 +15,7 @@
 - Todos los precios, impuestos y descuentos se recalculan en servidor y el dinero se representa en céntimos de PEN o decimal exacto; nunca `float`.
 - La API pública DummyJSON solo sirve para poblar/sincronizar datos de demostración; PostgreSQL es la fuente de verdad de catálogo comercial, precios, stock, órdenes y facturas.
 - JSON público: máximo 100 KB; cada endpoint puede imponer un límite menor; se rechazan campos desconocidos en comandos sensibles, parámetros repetidos ambiguos y prototipos controlados por el usuario.
-- Node.js LTS, lockfile versionado, `npm ci`/instalación reproducible, TypeScript strict cuando sea compatible y dependencias revisadas por SCA.
+- Node.js LTS, lockfile versionado, `pnpm install --frozen-lockfile` (instalación reproducible equivalente a `npm ci`), TypeScript strict cuando sea compatible y dependencias revisadas por SCA.
 - No se almacenan números de tarjeta, CVV, bandas magnéticas, tokens secretos, cookies ni headers de autorización en logs.
 - Sesiones opacas en cookies `Secure`, `HttpOnly`, `SameSite` apropiado; CSRF para mutaciones; MFA obligatorio para administración, pagos, facturación y reembolsos.
 - Argon2id para contraseñas; RBAC/ABAC con denegación por defecto y autorización por objeto.
