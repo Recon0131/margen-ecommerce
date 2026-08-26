@@ -1,1 +1,1 @@
-module.exports={preset:'ts-jest',testEnvironment:'node',testRegex:'.*\\.(test|e2e-spec|int-spec)\\.ts$',moduleNameMapper:{'^@margen/config$':'<rootDir>/../../packages/config/src'}};
+module.exports={preset:'ts-jest',testEnvironment:'node',testRegex:'.*\\.(test|e2e-spec|int-spec|spec)\\.ts$',moduleNameMapper:{'^@margen/config$':'<rootDir>/../../packages/config/src','^@margen/contracts$':'<rootDir>/../../packages/contracts/src','^@margen/domain$':'<rootDir>/../../packages/domain/src'}};
