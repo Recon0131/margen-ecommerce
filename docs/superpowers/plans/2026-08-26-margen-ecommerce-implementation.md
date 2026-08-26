@@ -424,7 +424,7 @@ it('returns the same provider order for a repeated idempotency key', async () =>
 });
 
 it('does not process an invalid or duplicate webhook', async () => {
-  await expect(verifyMercadoPagoWebhook(Buffer.from('{}'), 'bad-signature', 'request-1')).rejects.toMatchObject({ status: 401 });
+  expect(() => verifyMercadoPagoWebhook(Buffer.from('{}'), 'bad-signature', 'request-1')).toThrow('INVALID_SIGNATURE');
   await processPaymentEvent('event-1');
   await expect(processPaymentEvent('event-1')).resolves.toMatchObject({ duplicate: true });
 });
