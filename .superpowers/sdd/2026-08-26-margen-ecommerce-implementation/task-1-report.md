@@ -6,7 +6,7 @@ Created the pnpm workspace foundation, strict TypeScript configuration, environm
 
 ## Commit
 
-`fdf24b0a6d9d40538ae170bb04b6870c708abe26` — `chore: bootstrap secure monorepo`.
+`7a530d2` — `chore: bootstrap secure monorepo`.
 
 ## Verification
 
@@ -36,4 +36,8 @@ Verification after fixes:
 - `corepack pnpm build` — PASS; all packages/apps built and static pages generated (exit 0).
 - Focused `env.test.ts` — PASS; 2 tests covering required variables, blank secrets, URL syntax, and CORS list handling.
 
-Fix commit: recorded in git after this report update.
+Fix commit: `8597db5` — `fix: harden environment validation and cors`.
+
+## Reviewer metadata correction
+
+The original implementation commit is `7a530d2` (`chore: bootstrap secure monorepo`). The reviewer-fix commit is `8597db5` (`fix: harden environment validation and cors`).
