@@ -1,0 +1,3 @@
+export interface AppConfig { databaseUrl:string; redisUrl:string; sessionSecret:string; appOrigin:string; corsOrigins:string[]; }
+export class ValidationError extends Error {}
+export function loadConfig(env:NodeJS.ProcessEnv):AppConfig { const required=['DATABASE_URL','REDIS_URL','SESSION_SECRET','APP_ORIGIN','CORS_ORIGINS'] as const; const missing=required.filter((key)=>!env[key]); if(missing.length) throw new ValidationError(`Missing required environment variables: ${missing.join(', ')}`); return {databaseUrl:env.DATABASE_URL!,redisUrl:env.REDIS_URL!,sessionSecret:env.SESSION_SECRET!,appOrigin:env.APP_ORIGIN!,corsOrigins:env.CORS_ORIGINS!.split(',').map((v)=>v.trim()).filter(Boolean)}; }
