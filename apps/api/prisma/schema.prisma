@@ -1,0 +1,208 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum CartStatus {
+  ACTIVE
+  CONVERTED
+  EXPIRED
+}
+
+enum OrderStatus {
+  CREATED
+  PENDING_PAYMENT
+  PAID
+  FULFILLED
+  SHIPPED
+  DELIVERED
+  EXPIRED
+  CANCELLED
+  PAYMENT_FAILED
+  PARTIALLY_REFUNDED
+  REFUNDED
+  CHARGEBACK
+}
+
+model Category {
+  id     String  @id @default(uuid()) @db.Uuid
+  slug   String  @unique
+  name   String
+  active Boolean @default(true)
+}
+
+model Product {
+  id          String        @id @default(uuid()) @db.Uuid
+  slug        String        @unique
+  sku         String        @unique
+  name        String
+  description String
+  priceMinor  BigInt
+  currency    String        @default("PEN")
+  status      ProductStatus @default(DRAFT)
+  categoryId  String?       @db.Uuid
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model ProductVariant {
+  id         String  @id @default(uuid()) @db.Uuid
+  productId  String  @db.Uuid
+  sku        String  @unique
+  priceMinor BigInt?
+  attributes Json    @default("{}")
+}
+
+model Cart {
+  id        String     @id @default(uuid()) @db.Uuid
+  userId    String?    @db.Uuid
+  tokenHash String?    @unique
+  status    CartStatus @default(ACTIVE)
+  expiresAt DateTime
+}
+
+model CartLine {
+  id       String @id @default(uuid()) @db.Uuid
+  cartId   String @db.Uuid
+  sku      String
+  quantity Int
+
+  @@unique([cartId, sku])
+}
+
+model InventoryItem {
+  id       String @id @default(uuid()) @db.Uuid
+  sku      String @unique
+  onHand   Int    @default(0)
+  reserved Int    @default(0)
+  version  Int    @default(0)
+}
+
+model InventoryMovement {
+  id              String   @id @default(uuid()) @db.Uuid
+  inventoryItemId String   @db.Uuid
+  reason          String
+  previousOnHand  Int
+  nextOnHand      Int
+  correlationId   String
+  createdAt       DateTime @default(now())
+}
+
+model StockReservation {
+  id              String   @id @default(uuid()) @db.Uuid
+  inventoryItemId String   @db.Uuid
+  cartId          String?  @db.Uuid
+  orderId         String?  @db.Uuid
+  quantity        Int
+  status          String   @default("ACTIVE")
+  expiresAt       DateTime
+}
+
+model Order {
+  id              String      @id @default(uuid()) @db.Uuid
+  publicId        String      @unique
+  userId          String?     @db.Uuid
+  status          OrderStatus @default(CREATED)
+  currency        String      @default("PEN")
+  subtotalMinor   BigInt
+  discountMinor   BigInt      @default(0)
+  taxMinor        BigInt      @default(0)
+  totalMinor      BigInt
+  taxRateBps      Int         @default(0)
+  shippingAddress Json
+  idempotencyKey  String      @unique @db.Uuid
+}
+
+model OrderLine {
+  id                  String @id @default(uuid()) @db.Uuid
+  orderId             String @db.Uuid
+  sku                 String
+  productName         String
+  quantity            Int
+  unitAmountMinor     BigInt
+  discountAmountMinor BigInt @default(0)
+  taxAmountMinor      BigInt @default(0)
+  snapshot            Json
+}
+
+model PaymentAttempt {
+  id                String  @id @default(uuid()) @db.Uuid
+  orderId           String  @db.Uuid
+  provider          String
+  externalReference String? @unique
+  amountMinor       BigInt
+  currency          String
+  status            String  @default("PENDING")
+  idempotencyKey    String  @unique @db.Uuid
+}
+
+model WebhookEvent {
+  id                String  @id @default(uuid()) @db.Uuid
+  provider          String
+  externalId        String
+  signatureVerified Boolean @default(false)
+  payload           Json
+
+  @@unique([provider, externalId])
+}
+
+model Invoice {
+  id         String  @id @default(uuid()) @db.Uuid
+  orderId    String  @db.Uuid
+  series     String
+  number     Int
+  type       String
+  status     String  @default("DRAFT")
+  snapshot   Json
+  storageKey String? @unique
+
+  @@unique([series, number])
+}
+
+model CreditNote {
+  id              String  @id @default(uuid()) @db.Uuid
+  invoiceId       String  @db.Uuid
+  reason          String
+  amountMinor     BigInt
+  refundReference String? @unique
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  passwordHash String?
+  createdAt    DateTime @default(now())
+}
+
+model Session {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  tokenHash String   @unique
+  expiresAt DateTime
+}
+
+model Role {
+  id   String @id @default(uuid()) @db.Uuid
+  name String @unique
+}
+
+model AuditEvent {
+  id            String   @id @default(uuid()) @db.Uuid
+  actorId       String?  @db.Uuid
+  action        String
+  resourceType  String
+  resourceId    String
+  outcome       String
+  correlationId String
+  createdAt     DateTime @default(now())
+}
