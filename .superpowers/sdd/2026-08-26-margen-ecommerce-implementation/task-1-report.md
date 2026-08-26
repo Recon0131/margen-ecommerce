@@ -23,3 +23,17 @@ The health response is limited to `status` and `version`; environment secrets ar
 ## Concerns
 
 The local environment did not expose a standalone `pnpm` executable, so verification used `corepack pnpm` with the pinned package manager. Next.js 15.5.2 reports a package deprecation warning during install; the pinned version remains reproducible.
+
+## Reviewer fix round 1
+
+Validated all integration variables (including Mercado Pago and S3), rejected blank secrets, malformed URLs, and empty/invalid CORS origins, and wired API CORS exclusively to validated origins. Restricted Node to the supported LTS range `>=20.0.0 <25.0.0`.
+
+Verification after fixes:
+
+- `corepack pnpm lint` — PASS; all 7 workspace projects completed.
+- `corepack pnpm typecheck` — PASS; all 7 workspace projects completed.
+- `corepack pnpm --filter api test -- health.e2e-spec.ts` — PASS; 1 suite, 1 test.
+- `corepack pnpm build` — PASS; all packages/apps built and static pages generated (exit 0).
+- Focused `env.test.ts` — PASS; 2 tests covering required variables, blank secrets, URL syntax, and CORS list handling.
+
+Fix commit: recorded in git after this report update.
