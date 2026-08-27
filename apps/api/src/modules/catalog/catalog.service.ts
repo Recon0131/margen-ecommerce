@@ -23,4 +23,8 @@ export class CatalogService {
   async listCategories(): Promise<CategorySummary[]> {
     return this.repository.listCategories();
   }
+
+  async findProductsBySkus(skus: string[]): Promise<{ id: string; sku: string; name: string; priceMinor: bigint; currency: string; status: string }[]> {
+    return this.repository.findBySkus(skus);
+  }
 }

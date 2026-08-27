@@ -77,6 +77,14 @@ export class CatalogRepository {
     };
   }
 
+  async findBySkus(skus: string[]): Promise<{ id: string; sku: string; name: string; priceMinor: bigint; currency: string; status: string }[]> {
+    if (skus.length === 0) return [];
+    return this.prisma.product.findMany({
+      where: { sku: { in: skus } },
+      select: { id: true, sku: true, name: true, priceMinor: true, currency: true, status: true },
+    });
+  }
+
   async listCategories(): Promise<CategorySummary[]> {
     const categories = await this.prisma.category.findMany({
       where: { active: true },
