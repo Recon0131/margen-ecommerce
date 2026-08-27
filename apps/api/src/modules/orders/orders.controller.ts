@@ -6,6 +6,11 @@ import { OrdersService } from './orders.service';
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
+  @Get()
+  async listOrders() {
+    return this.ordersService.listOrders();
+  }
+
   @Post()
   async createOrder(@Body() body: unknown) {
     const parsed = CreateOrderSchema.safeParse(body);

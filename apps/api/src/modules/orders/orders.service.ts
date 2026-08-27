@@ -110,6 +110,14 @@ export class OrdersService {
     return { id: updated.id, publicId: updated.publicId, status: 'pending_payment' as const, totalMinor: updated.totalMinor };
   }
 
+  async listOrders(userId?: string) {
+    return this.prisma.order.findMany({
+      where: userId ? { userId } : {},
+      include: { lines: true },
+      orderBy: { id: 'desc' },
+    });
+  }
+
   async getOrder(orderId: string) {
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },

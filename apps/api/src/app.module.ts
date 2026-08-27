@@ -4,6 +4,8 @@ import { CatalogModule } from './modules/catalog/catalog.module';
 import { CartModule } from './modules/cart/cart.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { OrdersModule } from './modules/orders/orders.module';
+import { IdentityModule } from './modules/identity/identity.module';
+import { AdminUsersModule } from './modules/admin/admin-users.module';
 
 @Controller()
 class HealthController {
@@ -14,7 +16,7 @@ class HealthController {
 }
 
 @Module({
-  imports: [PrismaModule, CatalogModule, CartModule, InventoryModule, OrdersModule],
+  imports: [PrismaModule, CatalogModule, CartModule, InventoryModule, OrdersModule, IdentityModule, AdminUsersModule],
   controllers: [HealthController],
 })
 export class AppModule {}
