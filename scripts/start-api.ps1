@@ -1,0 +1,5 @@
+$env:DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/margen"
+$env:NODE_ENV="test"
+$env:PORT="3001"
+Set-Location "D:\E-Commerce\.worktrees\margen-ecommerce\apps\api"
+& "node_modules\.bin\tsx.CMD" "src/main.ts"
