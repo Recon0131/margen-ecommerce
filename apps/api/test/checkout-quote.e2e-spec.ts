@@ -15,6 +15,15 @@ describe('Cart and checkout', () => {
     prisma = moduleRef.get(PrismaService);
     app.useGlobalInterceptors(new BigIntSerializerInterceptor());
     await app.init();
+
+    // Clean up residual state from prior runs
+    await prisma.stockReservation.deleteMany();
+    await prisma.orderLine.deleteMany();
+    await prisma.order.deleteMany();
+    await prisma.cartLine.deleteMany();
+    await prisma.cart.deleteMany();
+    await prisma.inventoryMovement.deleteMany();
+    await prisma.$executeRaw`UPDATE "InventoryItem" SET "reserved" = 0, "version" = 0 WHERE "sku" = 'HUB-01'`;
   });
 
   afterAll(async () => {
