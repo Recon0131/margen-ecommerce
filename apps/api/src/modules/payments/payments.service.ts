@@ -77,16 +77,25 @@ export class PaymentsService {
     payload: { type: string; data: { id: string } },
     signatureHeader?: string,
   ): Promise<void> {
+    if (!payload || typeof payload !== 'object' || typeof payload.type !== 'string') {
+      throw new BadRequestException({ code: 'INVALID_WEBHOOK', message: 'Malformed webhook payload' });
+    }
+
     if (payload.type !== 'payment') {
       this.logger.log(`Ignoring webhook event type: ${payload.type}`);
       return;
     }
 
-    if (!signatureHeader) {
-      this.logger.warn(`Webhook missing x-signature header for payment ${payload.data.id}`);
+    const paymentId = payload.data?.id;
+    if (typeof paymentId !== 'string' || paymentId.length === 0) {
+      throw new BadRequestException({ code: 'INVALID_WEBHOOK', message: 'Missing payment id' });
     }
 
-    const payment = await this.mpClient.getPayment(payload.data.id);
+    if (!signatureHeader) {
+      this.logger.warn(`Webhook missing x-signature header for payment ${paymentId}`);
+    }
+
+    const payment = await this.mpClient.getPayment(paymentId);
 
     const attempt = await this.prisma.paymentAttempt.findFirst({
       where: { externalReference: payment.external_reference },

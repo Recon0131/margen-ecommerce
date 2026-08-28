@@ -88,15 +88,27 @@ Module exports service for cross-module consumption.
 | 6. Identity, sessions, admin | `04a7f43` | Done |
 | 7. Mercado Pago + webhooks | `b4b37cb` | Done |
 | 8. PDF invoices + fiscal | `a8a5385` | Done |
-| 9. Storefront integration | — | **Next (done, uncommitted)** |
-| 10. Hardening + docs | — | Pending |
+| 9. Storefront integration | `d52c44e` | Done |
+| 10. Hardening + docs | (Task 10 commit) | Done |
 
-## Test Counts (as of Task 8-9)
+## Test Counts (as of Task 10)
 
-- API: 69/69 (health, env, catalog, checkout, inventory concurrency, identity, authorization, payments, bullmq, invoices, mappers, services, prisma schema)
+- API: 81/81 (health, env, catalog, checkout, inventory concurrency, identity, authorization, payments, bullmq, invoices, security-controls, webhook-fuzz, concurrency-load, mappers, services, prisma schema)
 - Domain: 18/18 (money, order-state, inventory)
 - Storefront E2E: 9/9 (catalog×6, cart×3)
-- Storefront build: OK
+- Storefront build: OK (Next 15.5.24)
+- `pnpm audit --audit-level=high`: 0 high/critical
+
+## Security hardening (Task 10)
+
+- `SecurityHeadersMiddleware`: CSP, nosniff, DENY framing, no-referrer, permissions-policy
+- `CorrelationIdMiddleware`: `x-request-id` header + correlation id on errors
+- `RateLimitGuard` + `rate-limit.config`: route-scoped 429 limits (login 5/min, etc.)
+- `GlobalExceptionFilter`: `{ statusCode, code, message, correlationId }` (never 500 internals)
+- Webhook payload validation (returns 400, never 500 on malformed input)
+- SSRF allowlist already enforced (`validateUpstreamUrl`)
+- Dependency overrides in root `package.json`: multer, path-to-regexp, postcss, sharp, file-type
+- CI: postgres+redis services, migrations, e2e storefront job, gitleaks, `pnpm audit`, `git diff --check`
 
 ## Storefront Pages
 

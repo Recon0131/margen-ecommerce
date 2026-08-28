@@ -7,16 +7,40 @@ export class GlobalExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
+    const request = ctx.getRequest();
+
+    const correlationId = (request as any).correlationId ?? '';
 
     const status = exception instanceof HttpException ? exception.getStatus() : 500;
-    const message = exception instanceof Error ? exception.message : 'Unknown error';
-    const stack = exception instanceof Error ? exception.stack : '';
+    const isHttp = exception instanceof HttpException;
+    const httpResponse = isHttp ? exception.getResponse() : null;
 
-    this.logger.error(`Unhandled exception: ${message}`, stack);
+    let code: string;
+    let message: string;
+
+    if (httpResponse && typeof httpResponse === 'object' && httpResponse !== null) {
+      const body = httpResponse as Record<string, unknown>;
+      code = typeof body.code === 'string' ? body.code : 'HTTP_ERROR';
+      message = typeof body.message === 'string' ? body.message : 'Request failed';
+    } else {
+      code = status >= 500 ? 'INTERNAL_ERROR' : 'HTTP_ERROR';
+      message = status >= 500 ? 'Internal server error' : 'Request failed';
+    }
+
+    if (status >= 500) {
+      const stack = exception instanceof Error ? exception.stack : '';
+      this.logger.error(
+        `Unhandled exception [${correlationId}]: ${exception instanceof Error ? exception.message : String(exception)}`,
+        stack,
+      );
+      message = 'Internal server error';
+    }
 
     response.status(status).json({
       statusCode: status,
-      message: process.env.NODE_ENV === 'test' ? message : 'Internal server error',
+      code,
+      message,
+      correlationId,
     });
   }
 }
