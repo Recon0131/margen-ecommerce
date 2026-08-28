@@ -37,3 +37,102 @@ export async function getCategories(): Promise<CategorySummary[]> {
 
   return res.json();
 }
+
+export type CartLine = { sku: string; quantity: number };
+export type Cart = {
+  id: string;
+  lines: CartLine[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+async function jsonRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: { 'Content-Type': 'application/json', ...(options.headers ?? {}) },
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message ?? `API error: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function jsonRequestWithCookies<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: { 'Content-Type': 'application/json', ...(options.headers ?? {}) },
+    cache: 'no-store',
+    credentials: 'include',
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message ?? `API error: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function createCart(lines: CartLine[]): Promise<Cart> {
+  return jsonRequest<Cart>('/v1/cart', { method: 'POST', body: JSON.stringify({ lines }) });
+}
+
+export async function updateCart(id: string, lines: CartLine[]): Promise<Cart> {
+  return jsonRequest<Cart>(`/v1/cart/${id}`, { method: 'PATCH', body: JSON.stringify({ lines }) });
+}
+
+export async function getCartQuote(cartId: string): Promise<{
+  id: string;
+  lines: { sku: string; productName: string; quantity: number; unitPriceMinor: string; lineTotalMinor: string }[];
+  subtotalMinor: string;
+  totalMinor: string;
+}> {
+  return jsonRequest(`/v1/cart/quote?cartId=${encodeURIComponent(cartId)}`);
+}
+
+export async function createOrder(input: {
+  cartId: string;
+  lines: CartLine[];
+  shippingAddress: {
+    recipient: string;
+    line1: string;
+    district: string;
+    city: string;
+    country: 'PE';
+  };
+  idempotencyKey: string;
+  invoiceType: 'BOLETA' | 'FACTURA';
+}): Promise<{ id: string; publicId: string; status: string; totalMinor: string }> {
+  return jsonRequest('/v1/orders', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export async function getOrderPayments(orderId: string): Promise<{ status: string }> {
+  return jsonRequest(`/v1/payments/${encodeURIComponent(orderId)}`);
+}
+
+export async function createCheckout(orderId: string): Promise<{ checkoutUrl: string; externalReference: string }> {
+  return jsonRequest('/v1/payments/checkout', { method: 'POST', body: JSON.stringify({ orderId }) });
+}
+
+export async function generateInvoice(input: {
+  orderId: string;
+  type: 'BOLETA' | 'FACTURA';
+  customerDoc: string;
+  customerName: string;
+}): Promise<{ invoiceId: string; type: string; series: string; number: number }> {
+  return jsonRequest('/v1/invoices', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export async function registerCustomer(input: {
+  email: string;
+  password: string;
+}): Promise<{ id: string; email: string }> {
+  return jsonRequest('/v1/auth/register', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export async function loginCustomer(input: {
+  email: string;
+  password: string;
+}): Promise<{ userId: string }> {
+  return jsonRequestWithCookies('/v1/auth/login', { method: 'POST', body: JSON.stringify(input) });
+}

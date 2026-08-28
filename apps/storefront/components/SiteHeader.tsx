@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { CartButton } from './CartButton';
 
 const headerStyle: React.CSSProperties = {
   display: 'flex',
@@ -45,6 +46,10 @@ export function SiteHeader() {
         <a href="/catalogo" style={linkStyle}>
           Catálogo
         </a>
+        <a href="/login" style={linkStyle}>
+          Ingresar
+        </a>
+        <CartButton />
       </nav>
     </header>
   );

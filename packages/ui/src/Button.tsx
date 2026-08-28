@@ -12,6 +12,7 @@ type ButtonProps = {
   type?: 'button' | 'submit' | 'reset';
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
   className?: string;
+  fullWidth?: boolean;
 };
 
 const variantStyles: Record<ButtonVariant, React.CSSProperties> = {
@@ -60,6 +61,7 @@ export function Button({
   type = 'button',
   onClick,
   className,
+  fullWidth = false,
 }: ButtonProps) {
   const isDisabled = disabled || loading;
 
@@ -76,6 +78,7 @@ export function Button({
         ...sizeStyles[size],
         opacity: isDisabled ? 0.5 : 1,
         cursor: isDisabled ? 'not-allowed' : 'pointer',
+        width: fullWidth ? '100%' : undefined,
       }}
     >
       {loading && (

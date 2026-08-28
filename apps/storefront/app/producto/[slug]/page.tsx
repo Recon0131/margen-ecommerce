@@ -1,6 +1,7 @@
 import { getProductBySlug } from '../../../lib/api-client';
 import { formatPrice } from '../../../lib/product-types';
 import { StatusMessage } from '@margen/ui';
+import { AddToCart } from '../../../components/AddToCart';
 import { notFound } from 'next/navigation';
 
 type Props = {
@@ -98,6 +99,10 @@ export default async function ProductDetailPage({ params }: Props) {
               Categoría: {product.categorySlug}
             </p>
           )}
+
+          <div style={{ marginTop: '24px' }}>
+            <AddToCart sku={product.sku} name={product.name} />
+          </div>
         </div>
       </div>
     </>
