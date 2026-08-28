@@ -163,14 +163,16 @@ model WebhookEvent {
 }
 
 model Invoice {
-  id         String  @id @default(uuid()) @db.Uuid
-  orderId    String  @db.Uuid
-  series     String
-  number     Int
-  type       String
-  status     String  @default("DRAFT")
-  snapshot   Json
-  storageKey String? @unique
+  id           String  @id @default(uuid()) @db.Uuid
+  orderId      String  @db.Uuid
+  series       String
+  number       Int
+  type         String
+  status       String  @default("DRAFT")
+  customerDoc  String?
+  customerName String?
+  snapshot     Json
+  storageKey   String? @unique
 
   @@unique([series, number])
 }
