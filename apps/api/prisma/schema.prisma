@@ -53,6 +53,8 @@ model Product {
   status      ProductStatus @default(DRAFT)
   categoryId  String?       @db.Uuid
   category    Category?     @relation(fields: [categoryId], references: [id])
+  thumbnail   String?
+  images      Json          @default("[]")
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 }
@@ -68,6 +70,7 @@ model ProductVariant {
 model Cart {
   id        String     @id @default(uuid()) @db.Uuid
   userId    String?    @db.Uuid
+  user      User?      @relation(fields: [userId], references: [id])
   tokenHash String?    @unique
   status    CartStatus @default(ACTIVE)
   expiresAt DateTime
@@ -191,6 +194,7 @@ model User {
   passwordHash String?
   createdAt    DateTime   @default(now())
   roles        UserRole[]
+  carts        Cart[]
 }
 
 model Session {

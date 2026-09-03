@@ -2,55 +2,72 @@
 
 import React from 'react';
 import { CartButton } from './CartButton';
-
-const headerStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  padding: '16px 24px',
-  borderBottom: 'var(--border)',
-  background: 'var(--color-bg-surface)',
-  position: 'sticky',
-  top: 0,
-  zIndex: 100,
-};
-
-const logoStyle: React.CSSProperties = {
-  fontFamily: 'var(--font-heading)',
-  fontSize: '1.5rem',
-  fontWeight: 700,
-  color: 'var(--color-text)',
-  textDecoration: 'none',
-};
-
-const navStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '24px',
-};
-
-const linkStyle: React.CSSProperties = {
-  color: 'var(--color-text-muted)',
-  textDecoration: 'none',
-  fontSize: '0.9375rem',
-  transition: 'color var(--transition-fast)',
-};
+import { useAuth } from '../lib/auth-context';
 
 export function SiteHeader() {
+  const { user, loading, logout } = useAuth();
   return (
-    <header style={headerStyle}>
-      <a href="/" style={logoStyle}>
-        Margen
-      </a>
-      <nav style={navStyle} aria-label="Principal">
-        <a href="/catalogo" style={linkStyle}>
-          Catálogo
+    <header
+      style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+        background: 'color-mix(in srgb, var(--color-bg-surface) 85%, transparent)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        borderBottom: 'var(--border)',
+      }}
+    >
+      <div
+        className="container"
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '64px' }}
+      >
+        <a
+          href="/"
+          style={{
+            fontFamily: 'var(--font-heading)',
+            fontSize: 'var(--text-xl)',
+            fontWeight: 800,
+            letterSpacing: '-0.02em',
+            color: 'var(--color-text)',
+            textDecoration: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-2)',
+          }}
+        >
+          <span
+            style={{
+              width: 10,
+              height: 10,
+              borderRadius: '50%',
+              background: 'var(--color-accent)',
+              display: 'inline-block',
+            }}
+            aria-hidden="true"
+          />
+          Margen
         </a>
-        <a href="/login" style={linkStyle}>
-          Ingresar
-        </a>
-        <CartButton />
-      </nav>
+        <nav style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }} aria-label="Principal">
+          <a href="/catalogo" className="btn btn-ghost btn-sm">
+            Catálogo
+          </a>
+          {loading ? (
+            <span className="btn btn-ghost btn-sm btn-disabled" aria-hidden="true">
+              ···
+            </span>
+          ) : user ? (
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => void logout()}>
+              Cerrar sesión
+            </button>
+          ) : (
+            <a href="/login" className="btn btn-ghost btn-sm">
+              Ingresar
+            </a>
+          )}
+          <CartButton />
+        </nav>
+      </div>
     </header>
   );
 }

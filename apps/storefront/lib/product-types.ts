@@ -6,6 +6,7 @@ export type ProductSummary = {
   priceMinor: string;
   currency: 'PEN';
   categorySlug?: string;
+  thumbnail?: string;
   status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
 };
 

@@ -1,6 +1,7 @@
 import type { Page, ProductSummary, ProductDetail, CategorySummary, ProductQuery } from './product-types';
 
-const API_BASE = process.env.API_BASE_URL ?? 'http://localhost:3001';
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? process.env.API_BASE_URL ?? 'http://localhost:3001';
 
 export async function getProducts(query: ProductQuery = {}): Promise<Page<ProductSummary>> {
   const params = new URLSearchParams();
@@ -73,12 +74,16 @@ export async function jsonRequestWithCookies<T>(path: string, options: RequestIn
   return res.json();
 }
 
+function cartPayload(lines: CartLine[]): { sku: string; quantity: number }[] {
+  return lines.map((l) => ({ sku: l.sku, quantity: l.quantity }));
+}
+
 export async function createCart(lines: CartLine[]): Promise<Cart> {
-  return jsonRequest<Cart>('/v1/cart', { method: 'POST', body: JSON.stringify({ lines }) });
+  return jsonRequestWithCookies<Cart>('/v1/cart', { method: 'POST', body: JSON.stringify({ lines: cartPayload(lines) }) });
 }
 
 export async function updateCart(id: string, lines: CartLine[]): Promise<Cart> {
-  return jsonRequest<Cart>(`/v1/cart/${id}`, { method: 'PATCH', body: JSON.stringify({ lines }) });
+  return jsonRequestWithCookies<Cart>(`/v1/cart/${id}`, { method: 'PATCH', body: JSON.stringify({ lines: cartPayload(lines) }) });
 }
 
 export async function getCartQuote(cartId: string): Promise<{
@@ -87,7 +92,11 @@ export async function getCartQuote(cartId: string): Promise<{
   subtotalMinor: string;
   totalMinor: string;
 }> {
-  return jsonRequest(`/v1/cart/quote?cartId=${encodeURIComponent(cartId)}`);
+  return jsonRequestWithCookies(`/v1/cart/quote?cartId=${encodeURIComponent(cartId)}`);
+}
+
+export async function getUserCart(): Promise<Cart> {
+  return jsonRequestWithCookies<Cart>('/v1/cart');
 }
 
 export async function createOrder(input: {
@@ -103,15 +112,16 @@ export async function createOrder(input: {
   idempotencyKey: string;
   invoiceType: 'BOLETA' | 'FACTURA';
 }): Promise<{ id: string; publicId: string; status: string; totalMinor: string }> {
-  return jsonRequest('/v1/orders', { method: 'POST', body: JSON.stringify(input) });
+  const body = JSON.stringify({ ...input, lines: cartPayload(input.lines) });
+  return jsonRequestWithCookies('/v1/orders', { method: 'POST', body });
 }
 
 export async function getOrderPayments(orderId: string): Promise<{ status: string }> {
-  return jsonRequest(`/v1/payments/${encodeURIComponent(orderId)}`);
+  return jsonRequestWithCookies(`/v1/payments/${encodeURIComponent(orderId)}`);
 }
 
 export async function createCheckout(orderId: string): Promise<{ checkoutUrl: string; externalReference: string }> {
-  return jsonRequest('/v1/payments/checkout', { method: 'POST', body: JSON.stringify({ orderId }) });
+  return jsonRequestWithCookies('/v1/payments/checkout', { method: 'POST', body: JSON.stringify({ orderId }) });
 }
 
 export async function generateInvoice(input: {
@@ -120,14 +130,14 @@ export async function generateInvoice(input: {
   customerDoc: string;
   customerName: string;
 }): Promise<{ invoiceId: string; type: string; series: string; number: number }> {
-  return jsonRequest('/v1/invoices', { method: 'POST', body: JSON.stringify(input) });
+  return jsonRequestWithCookies('/v1/invoices', { method: 'POST', body: JSON.stringify(input) });
 }
 
 export async function registerCustomer(input: {
   email: string;
   password: string;
 }): Promise<{ id: string; email: string }> {
-  return jsonRequest('/v1/auth/register', { method: 'POST', body: JSON.stringify(input) });
+  return jsonRequestWithCookies('/v1/auth/register', { method: 'POST', body: JSON.stringify(input) });
 }
 
 export async function loginCustomer(input: {
@@ -135,4 +145,19 @@ export async function loginCustomer(input: {
   password: string;
 }): Promise<{ userId: string }> {
   return jsonRequestWithCookies('/v1/auth/login', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export async function getMe(): Promise<{ id: string; email: string } | null> {
+  const res = await fetch(`${API_BASE}/v1/auth/me`, {
+    headers: { 'Content-Type': 'application/json' },
+    cache: 'no-store',
+    credentials: 'include',
+  });
+  if (res.status === 401) return null;
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  return res.json();
+}
+
+export async function logoutCustomer(): Promise<{ ok: boolean }> {
+  return jsonRequestWithCookies('/v1/auth/logout', { method: 'POST' });
 }

@@ -83,7 +83,11 @@ export class InvoicesService {
     return { invoiceId: invoice.id, type: invoice.type, series: invoice.series, number: invoice.number };
   }
 
-  async getInvoice(orderId: string): Promise<{ invoiceId: string; type: string; series: string; number: number }> {
+  async getInvoice(userId: string, orderId: string): Promise<{ invoiceId: string; type: string; series: string; number: number }> {
+    const order = await this.prisma.order.findFirst({ where: { id: orderId, userId } });
+    if (!order) {
+      throw new NotFoundException({ code: 'ORDER_NOT_FOUND', message: 'Order not found' });
+    }
     const invoice = await this.prisma.invoice.findFirst({ where: { orderId } });
     if (!invoice) {
       throw new NotFoundException({ code: 'INVOICE_NOT_FOUND', message: 'No invoice found for this order' });

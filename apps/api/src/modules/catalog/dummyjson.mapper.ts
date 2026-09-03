@@ -25,7 +25,7 @@ export function validateUpstreamUrl(url: string): void {
 const upstreamProductSchema = z.object({
   id: z.number().int().positive(),
   title: z.string().min(1).max(200),
-  slug: z.string().min(1).max(200),
+  slug: z.string().min(1).max(200).optional(),
   price: z.number().positive(),
   description: z.string().max(5000).default(''),
   category: z.string().max(100).default('general'),
@@ -70,6 +70,18 @@ function generateSku(upstreamId: number): string {
   return `DJ-${String(upstreamId).padStart(4, '0')}`;
 }
 
+function slugify(value: string): string {
+  return (
+    value
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 120) || 'product'
+  );
+}
+
 const PEN_MINOR_UNITS_PER_UPSTREAM_UNIT = 100n;
 
 export function mapDummyJsonProduct(input: unknown): InternalProduct {
@@ -92,7 +104,7 @@ export function mapDummyJsonProduct(input: unknown): InternalProduct {
   return {
     upstreamId: raw.id,
     name: raw.title,
-    slug: raw.slug,
+    slug: raw.slug ?? slugify(raw.title),
     sku: generateSku(raw.id),
     description: raw.description,
     priceMinor: BigInt(Math.round(raw.price * Number(PEN_MINOR_UNITS_PER_UPSTREAM_UNIT))),

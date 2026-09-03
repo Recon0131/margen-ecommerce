@@ -1,6 +1,20 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import { Page, ProductSummary, ProductDetail, CategorySummary } from './catalog.schemas';
+
+type ProductImage = { url: string; alt: string };
+
+export function toProductImages(value: Prisma.JsonValue): ProductImage[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter(
+    (item): item is ProductImage =>
+      typeof item === 'object' &&
+      item !== null &&
+      typeof (item as Record<string, unknown>).url === 'string' &&
+      typeof (item as Record<string, unknown>).alt === 'string',
+  );
+}
 
 @Injectable()
 export class CatalogRepository {
@@ -47,6 +61,7 @@ export class CatalogRepository {
       priceMinor: p.priceMinor,
       currency: p.currency as 'PEN',
       categorySlug: p.category?.slug,
+      thumbnail: p.thumbnail ?? undefined,
       status: p.status,
     }));
 
@@ -70,7 +85,8 @@ export class CatalogRepository {
       priceMinor: product.priceMinor,
       currency: product.currency as 'PEN',
       categorySlug: product.category?.slug,
-      images: [],
+      thumbnail: product.thumbnail ?? undefined,
+      images: toProductImages(product.images),
       status: product.status,
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,

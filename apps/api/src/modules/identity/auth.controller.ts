@@ -1,4 +1,5 @@
-import { Controller, Post, Get, Body, Res, Req, UseGuards, HttpCode } from '@nestjs/common';
+import { Controller, Post, Get, Body, Res, Req, UseGuards, HttpCode, BadRequestException } from '@nestjs/common';
+import { RegisterSchema, LoginSchema } from '@margen/contracts';
 import { AuthService } from './auth.service';
 import { SessionGuard } from './session.guard';
 
@@ -7,17 +8,25 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  async register(@Body() body: { email: string; password: string }) {
-    return this.authService.register(body);
+  async register(@Body() body: unknown) {
+    const parsed = RegisterSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException({ code: 'VALIDATION_ERROR', message: 'Invalid registration data', details: parsed.error.issues });
+    }
+    return this.authService.register(parsed.data);
   }
 
   @Post('login')
   @HttpCode(200)
   async login(
-    @Body() body: { email: string; password: string },
+    @Body() body: unknown,
     @Res({ passthrough: true }) res: any,
   ) {
-    const result = await this.authService.login(body.email, body.password);
+    const parsed = LoginSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException({ code: 'VALIDATION_ERROR', message: 'Invalid login data', details: parsed.error.issues });
+    }
+    const result = await this.authService.login(parsed.data.email, parsed.data.password);
     res.setHeader('Set-Cookie', result.cookie);
     return { userId: result.userId };
   }

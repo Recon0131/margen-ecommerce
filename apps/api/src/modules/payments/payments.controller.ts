@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Param, Body, Headers, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, Headers, HttpCode, BadRequestException } from '@nestjs/common';
+import { CheckoutRequestSchema } from '@margen/contracts';
 import { PaymentsService } from './payments.service';
 
 @Controller('v1/payments')
@@ -6,8 +7,12 @@ export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
   @Post('checkout')
-  async createCheckout(@Body() body: { orderId: string }) {
-    return this.paymentsService.createCheckout(body.orderId);
+  async createCheckout(@Body() body: unknown) {
+    const parsed = CheckoutRequestSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException({ code: 'VALIDATION_ERROR', message: 'Invalid checkout data', details: parsed.error.issues });
+    }
+    return this.paymentsService.createCheckout(parsed.data.orderId);
   }
 
   @Post('webhook')

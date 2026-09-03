@@ -35,6 +35,18 @@ describe('mapDummyJsonProduct', () => {
     const b = mapDummyJsonProduct(validFixture);
     expect(a.sku).toBe(b.sku);
   });
+
+  it('derives a slug from the title when the upstream provides none', () => {
+    const { slug: _omit, ...withoutSlug } = validFixture;
+    const product = mapDummyJsonProduct(withoutSlug);
+    expect(product.slug).toBe('usb-c-hub-7-en-1');
+    expect(product.slug).toMatch(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+  });
+
+  it('keeps the upstream slug when provided', () => {
+    const product = mapDummyJsonProduct(validFixture);
+    expect(product.slug).toBe('usb-c-hub-7-in-1');
+  });
 });
 
 describe('validateUpstreamUrl', () => {

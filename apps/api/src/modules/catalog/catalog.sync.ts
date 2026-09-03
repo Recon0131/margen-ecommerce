@@ -56,6 +56,9 @@ export class CatalogSync {
       create: { slug: product.categorySlug, name: product.categorySlug, active: true },
     });
 
+    const images = product.images;
+    const thumbnail = images[0]?.url ?? null;
+
     await this.prisma.product.upsert({
       where: { slug: product.slug },
       update: {
@@ -65,6 +68,8 @@ export class CatalogSync {
         sku: product.sku,
         categoryId: category.id,
         status: 'PUBLISHED',
+        thumbnail,
+        images: images,
       },
       create: {
         slug: product.slug,
@@ -75,6 +80,8 @@ export class CatalogSync {
         currency: 'PEN',
         status: 'PUBLISHED',
         categoryId: category.id,
+        thumbnail,
+        images: images,
       },
     });
   }

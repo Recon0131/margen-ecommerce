@@ -12,6 +12,8 @@ dist/
 coverage/
 
 *.log
+*.err
+*_writetest.txt
 test-results/
 playwright-report/
 blob-report/

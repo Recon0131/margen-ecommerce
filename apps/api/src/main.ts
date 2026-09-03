@@ -31,7 +31,26 @@ async function bootstrap(): Promise<void> {
   app.useGlobalInterceptors(new BigIntSerializerInterceptor());
   app.useGlobalFilters(new GlobalExceptionFilter());
   app.useGlobalGuards(new RateLimitGuard());
-  if (config) app.enableCors({ origin: config.corsOrigins });
+  if (config) {
+    app.enableCors({
+      origin: config.corsOrigins,
+      methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID'],
+      credentials: true,
+      maxAge: 86400,
+    });
+  } else if (process.env.CORS_ORIGINS) {
+    const origins = process.env.CORS_ORIGINS.split(',').map((v) => v.trim()).filter(Boolean);
+    if (origins.length) {
+      app.enableCors({
+        origin: origins,
+        methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID'],
+        credentials: true,
+        maxAge: 86400,
+      });
+    }
+  }
   await app.listen(port);
 }
 

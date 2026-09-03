@@ -12,6 +12,8 @@ test.describe('Catalog browsing', () => {
     await page.goto('/catalogo');
     const searchbox = page.getByRole('searchbox');
     await searchbox.fill('hub');
+    await searchbox.press('Enter');
+    await expect(page).toHaveURL(/q=hub/);
     await expect(page.getByRole('link', { name: /hub/i }).first()).toBeVisible();
     await page.getByRole('link', { name: /hub/i }).first().click();
     await expect(page).toHaveURL(/\/producto\//);

@@ -1,10 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, FormField, StatusMessage } from '@margen/ui';
-import { loginCustomer } from '../../lib/api-client';
+import { useRouter } from 'next/navigation';
+import { Button, FormField, Input, StatusMessage } from '@margen/ui';
+import { loginCustomer, getMe } from '../../lib/api-client';
+import { useAuth } from '../../lib/auth-context';
 
 export default function LoginPage() {
+  const router = useRouter();
+  const { setUser } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -18,7 +22,14 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       const result = await loginCustomer({ email, password });
-      setSuccess(`Sesión iniciada. Tu ID: ${result.userId.slice(0, 8)}`);
+      setUser({ id: result.userId, email });
+      setSuccess('Sesión iniciada');
+      void getMe()
+        .then((me) => {
+          if (me) setUser(me);
+        })
+        .catch(() => {});
+      window.setTimeout(() => router.push('/'), 350);
     } catch (err: any) {
       setError(err.message ?? 'Credenciales inválidas');
     } finally {
@@ -27,29 +38,42 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ maxWidth: '400px', margin: '0 auto' }}>
-      <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '2rem', marginBottom: '24px' }}>Iniciar sesión</h1>
+    <div className="page">
+      <div className="container" style={{ maxWidth: 440 }}>
+        <div className="card" style={{ padding: 'var(--space-8)' }}>
+          <div style={{ textAlign: 'center', marginBottom: 'var(--space-6)' }}>
+            <span className="badge badge-accent mb-2">Cuenta Margen</span>
+            <h1 style={{ fontSize: 'var(--text-2xl)', marginBottom: 'var(--space-2)' }}>Iniciar sesión</h1>
+            <p className="text-muted" style={{ marginBottom: 0 }}>
+              Accede a tu cuenta para un pago más rápido.
+            </p>
+          </div>
 
-      {error && <StatusMessage variant="error">{error}</StatusMessage>}
-      {success && <StatusMessage variant="success">{success}</StatusMessage>}
+          {error && <StatusMessage variant="error">{error}</StatusMessage>}
+          {success && <StatusMessage variant="success">{success}</StatusMessage>}
 
-      <form onSubmit={handleSubmit}>
-        <FormField label="Correo electrónico" htmlFor="email">
-          <input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: 'var(--radius-sm)', border: 'var(--border)', background: 'var(--color-bg)' }} />
-        </FormField>
+          <form onSubmit={handleSubmit}>
+            <FormField label="Correo electrónico" htmlFor="email">
+              <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
+            </FormField>
 
-        <FormField label="Contraseña" htmlFor="password">
-          <input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: 'var(--radius-sm)', border: 'var(--border)', background: 'var(--color-bg)' }} />
-        </FormField>
+            <FormField label="Contraseña" htmlFor="password">
+              <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
+            </FormField>
 
-        <Button type="submit" fullWidth disabled={submitting}>
-          {submitting ? 'Ingresando…' : 'Iniciar sesión'}
-        </Button>
-      </form>
+            <Button type="submit" fullWidth disabled={submitting}>
+              {submitting ? 'Ingresando…' : 'Iniciar sesión'}
+            </Button>
+          </form>
 
-      <p style={{ marginTop: '16px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-        ¿No tienes cuenta? <a href="/registro">Regístrate</a>
-      </p>
+          <p style={{ marginTop: 'var(--space-6)', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+            ¿No tienes cuenta?{' '}
+            <a href="/registro" style={{ color: 'var(--color-accent)', fontWeight: 500 }}>
+              Regístrate
+            </a>
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

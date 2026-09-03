@@ -138,14 +138,25 @@ describe('PDF invoices and fiscal compliance', () => {
   });
 
   describe('GET /v1/invoices/:orderId', () => {
-    it('returns invoice data for an invoiced order', async () => {
+    async function loginAs(email: string): Promise<string> {
+      await request(app.getHttpServer())
+        .post('/v1/auth/register')
+        .send({ email, password: 'SecurePass123!' });
+      const loginRes = await request(app.getHttpServer())
+        .post('/v1/auth/login')
+        .send({ email, password: 'SecurePass123!' });
+      return loginRes.headers['set-cookie'][0];
+    }
+
+    async function createOwnedOrder(email: string): Promise<{ orderId: string; cookie: string }> {
+      const cookie = await loginAs(email);
       const cartRes = await request(app.getHttpServer())
         .post('/v1/cart')
         .send({ lines: [{ sku: 'HUB-01', quantity: 1 }] });
       const cartId = cartRes.body.id;
-
       const orderRes = await request(app.getHttpServer())
         .post('/v1/orders')
+        .set('Cookie', cookie)
         .send({
           cartId,
           lines: [{ sku: 'HUB-01', quantity: 1 }],
@@ -153,22 +164,51 @@ describe('PDF invoices and fiscal compliance', () => {
           idempotencyKey: crypto.randomUUID(),
           invoiceType: 'BOLETA',
         });
-      const orderId = orderRes.body.id;
+      return { orderId: orderRes.body.id, cookie };
+    }
 
+    it('requires authentication to read an invoice', async () => {
+      const { orderId } = await createOwnedOrder('owner1@example.com');
+      await request(app.getHttpServer())
+        .post('/v1/invoices')
+        .send({ orderId, type: 'BOLETA', customerDoc: '87654321', customerName: 'Test User' });
+
+      const res = await request(app.getHttpServer()).get(`/v1/invoices/${orderId}`);
+      expect(res.status).toBe(401);
+    });
+
+    it('returns invoice data for the order owner', async () => {
+      const { orderId, cookie } = await createOwnedOrder('owner2@example.com');
       await request(app.getHttpServer())
         .post('/v1/invoices')
         .send({ orderId, type: 'BOLETA', customerDoc: '87654321', customerName: 'Test User' });
 
       const res = await request(app.getHttpServer())
-        .get(`/v1/invoices/${orderId}`);
+        .get(`/v1/invoices/${orderId}`)
+        .set('Cookie', cookie);
       expect(res.status).toBe(200);
       expect(res.body).toHaveProperty('invoiceId');
       expect(res.body.type).toBe('BOLETA');
     });
 
-    it('returns 404 for non-invoiced order', async () => {
+    it('blocks another user from reading an order they do not own', async () => {
+      const { orderId } = await createOwnedOrder('owner3@example.com');
+      await request(app.getHttpServer())
+        .post('/v1/invoices')
+        .send({ orderId, type: 'BOLETA', customerDoc: '87654321', customerName: 'Test User' });
+
+      const otherCookie = await loginAs('other3@example.com');
       const res = await request(app.getHttpServer())
-        .get('/v1/invoices/00000000-0000-0000-0000-000000000000');
+        .get(`/v1/invoices/${orderId}`)
+        .set('Cookie', otherCookie);
+      expect(res.status).toBe(404);
+    });
+
+    it('returns 404 for non-invoiced order', async () => {
+      const { cookie } = await createOwnedOrder('owner4@example.com');
+      const res = await request(app.getHttpServer())
+        .get('/v1/invoices/00000000-0000-0000-0000-000000000000')
+        .set('Cookie', cookie);
       expect(res.status).toBe(404);
     });
   });

@@ -7,36 +7,15 @@ type StatusMessageProps = {
   children: React.ReactNode;
 };
 
-const variantStyles: Record<StatusVariant, React.CSSProperties> = {
-  info: {
-    background: 'var(--color-bg-muted)',
-    color: 'var(--color-text)',
-    border: '1px solid var(--color-border)',
-  },
-  error: {
-    background: 'var(--color-error-bg)',
-    color: 'var(--color-error)',
-    border: '1px solid var(--color-error)',
-  },
-  success: {
-    background: 'var(--color-success-bg)',
-    color: 'var(--color-success)',
-    border: '1px solid var(--color-success)',
-  },
+const variantClass: Record<StatusVariant, string> = {
+  info: 'alert-info',
+  error: 'alert-error',
+  success: 'alert-success',
 };
 
 export function StatusMessage({ variant = 'info', children }: StatusMessageProps) {
   return (
-    <div
-      role="status"
-      style={{
-        padding: '12px 16px',
-        borderRadius: 'var(--radius-sm)',
-        fontSize: '0.9375rem',
-        lineHeight: 1.5,
-        ...variantStyles[variant],
-      }}
-    >
+    <div role="status" className={`alert ${variantClass[variant]}`}>
       {children}
     </div>
   );

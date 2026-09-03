@@ -22,8 +22,8 @@ export function CatalogSearch({ defaultQuery = '' }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} role="search" aria-label="Buscar productos" style={{ marginBottom: '8px' }}>
-      <div style={{ display: 'flex', gap: '8px', maxWidth: '480px' }}>
+    <form onSubmit={handleSubmit} role="search" aria-label="Buscar productos" className="mb-6">
+      <div style={{ display: 'flex', gap: 'var(--space-2)', maxWidth: 520 }}>
         <input
           type="search"
           role="searchbox"
@@ -31,34 +31,10 @@ export function CatalogSearch({ defaultQuery = '' }: Props) {
           placeholder="Buscar accesorios..."
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          style={{
-            flex: 1,
-            padding: '8px 12px',
-            fontSize: '1rem',
-            fontFamily: 'var(--font-sans)',
-            color: 'var(--color-text)',
-            background: 'var(--color-bg-surface)',
-            border: 'var(--border)',
-            borderRadius: 'var(--radius-sm)',
-            outline: 'none',
-          }}
+          className="input"
+          style={{ flex: 1 }}
         />
-        <button
-          type="submit"
-          disabled={isPending}
-          style={{
-            padding: '8px 16px',
-            fontSize: '0.9375rem',
-            fontFamily: 'var(--font-sans)',
-            fontWeight: 500,
-            background: 'var(--color-accent)',
-            color: 'var(--color-text-inverse)',
-            border: '1px solid var(--color-accent)',
-            borderRadius: 'var(--radius-sm)',
-            cursor: isPending ? 'not-allowed' : 'pointer',
-            opacity: isPending ? 0.6 : 1,
-          }}
-        >
+        <button type="submit" className="btn btn-primary" disabled={isPending}>
           {isPending ? 'Buscando...' : 'Buscar'}
         </button>
       </div>
