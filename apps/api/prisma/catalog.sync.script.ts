@@ -1,16 +1,13 @@
-import 'reflect-metadata';
-import { NestFactory } from '@nestjs/core';
+import { PrismaClient } from '@prisma/client';
 import { PrismaService } from '../src/database/prisma.service';
-import { CatalogModule } from '../src/modules/catalog/catalog.module';
 import { CatalogSync } from '../src/modules/catalog/catalog.sync';
+import { DummyJsonClient } from '../src/modules/catalog/dummyjson.client';
 
 const FAKE_DEMO_SKUS = ['TEC-60', 'MOU-PRO', 'SOP-LAP', 'PAR-10W', 'CAR-15W', 'DIS-1TB', 'PEN-64G'];
 
 async function run(): Promise<void> {
-  const app = await NestFactory.createApplicationContext(CatalogModule, { logger: ['error', 'warn'] });
+  const prisma = new PrismaClient();
   try {
-    const prisma = app.get(PrismaService);
-
     const purged = await prisma.product.deleteMany({
       where: { sku: { in: FAKE_DEMO_SKUS } },
     });
@@ -21,9 +18,11 @@ async function run(): Promise<void> {
       });
     }
 
-    await app.get(CatalogSync).syncDummyJsonCatalog();
+    const sync = new CatalogSync(prisma as unknown as PrismaService, new DummyJsonClient());
+    const result = await sync.syncDummyJsonCatalog();
+    console.log(`SYNC_RESULT ${JSON.stringify(result)}`);
   } finally {
-    await app.close();
+    await prisma.$disconnect();
   }
 }
 
